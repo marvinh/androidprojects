@@ -1,0 +1,95 @@
+In my implementation for the face detection of head nodding yes or no I started
+of following a presentation of the face detection tracker and tutorial presented
+by Google Mobile Vision: https://developers.google.com/vision/face-detection-concepts.
+
+By following the document I was able to quickly get started setting up a camera with a
+FaceDetector and FaceTracker to begin testing head nods.
+
+Through this presentation I found that axis in which the head rotates left and right
+is called EulerY and used this figure to given to me through the FaceTracker which is
+sort of a listener for the FaceDetector and found values that would act as a threshold.
+
+The implementation of the detection is as follows. sideCount keeps track of head nodding left
+and right vertCount keeps track of a head nodding up and down as best as I could acheive it because
+there is no Euler axis for tracking the movement of a head up and down.
+
+int sideCount = 2;
+        int vertCount = 2;
+        String str = "Status";
+        float startingpoint = 0.0f;
+ @Override
+        public void onUpdate(FaceDetector.Detections<Face> detections, Face item)
+        {
+
+
+
+
+
+            //System.out.println("Euler Y: "+ item.getEulerY() + "Euler Z: "+ item.getEulerZ());
+
+
+            //System.out.println("POSY: "+ item.getPosition().y);
+
+
+
+            if(vertCount == 2)
+            {
+                startingpoint = item.getPosition().y;
+                vertCount = 1;
+            }
+
+            if(vertCount == 1)
+            {
+                if(startingpoint < item.getPosition().y)
+                {
+                    startingpoint = item.getPosition().y;
+                    vertCount = 0;
+                }
+            }
+
+            if(vertCount == 0)
+            {
+                if(startingpoint > item.getPosition().y)
+                {
+                    str = "Shaking head up and down";
+                    vertCount = 2;
+                }
+            }
+
+            if(item.getEulerY() >= 12.0)
+            {
+                if(sideCount == 2)
+                {
+                    sideCount = 1;
+                }else if(sideCount == 0){
+                    str = "Shaking head right left...";
+                    sideCount = 2;
+                }
+            }
+
+            if(item.getEulerY() <= -12.0)
+            {
+                if(sideCount == 2)
+                {
+                    sideCount = 0;
+                }else if(sideCount == 1){
+
+                    str = "Shaking head left right...";
+                    sideCount = 2;
+                }
+
+            }
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    TextView textView = (TextView) findViewById(R.id.trackText);
+                    textView.setText(str);
+
+                }
+            });
+
+            System.out.println(str);
+
+        }
